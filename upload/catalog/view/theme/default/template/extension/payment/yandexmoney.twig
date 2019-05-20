@@ -8,9 +8,29 @@
 	<input type="hidden" name="short-dest" value="{{ short_dest }}" />
 	<input type="hidden" name="label" value="{{ label }}" />
 	<input type="hidden" name="successURL" value="{{ successURL }}" />
-	<div class="buttons">
-		<div class="pull-right">
-			<input type="submit" value="{{ button_confirm }}" class="btn btn-primary" />
-		</div>
-	</div>
+	<button class="product-page__buttons-buy cart-page__link" id="button-yandexmoney-confirm" data-loading-text="{{ text_loading }}"> {{ button_confirm }} </button>
 </form>
+
+<script type="text/javascript">
+	jQuery('#button-yandexmoney-confirm').on('click', function() {
+		jQuery.ajax({
+			url: 'index.php?route=extension/payment/yandexmoney/confirm',
+			dataType: 'json',
+			beforeSend: function() {
+				jQuery('#button-yandexmoney-confirm').button('loading');
+			},
+			complete: function() {
+				jQuery('#button-yandexmoney-confirm').button('reset');
+			},
+			success: function(json) {
+				if (json['success']) {
+					console.log("success", json['success'])
+					// location = json['redirect'];
+				}
+			},
+			error: function(xhr, ajaxOptions, thrownError) {
+				alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+			}
+		});
+	});
+</script>

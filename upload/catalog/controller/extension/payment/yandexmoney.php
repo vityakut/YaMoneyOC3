@@ -27,7 +27,8 @@ class ControllerExtensionPaymentYandexmoney extends Controller
 
 		$data['short_dest'] = 'Покупка в ' . $this->config->get('config_name');
 
-		$data['successURL'] = HTTP_SERVER . 'index.php?route=extension/payment/yandexmoney/success';
+		$data['successURL'] = HTTP_SERVER;
+//		$data['successURL'] = HTTP_SERVER . 'index.php?route=extension/payment/yandexmoney/success';
 
 		$rur_code = 'RUB';
 
@@ -44,22 +45,16 @@ class ControllerExtensionPaymentYandexmoney extends Controller
 	{
 
 
-		if ($this->config->get('payment_yandexmoney_test')) {
-			$password_1 = $this->config->get('payment_yandexmoney_test_password_1');
-		} else {
-			$password_1 = $this->config->get('payment_yandexmoney_password_1');
-		}
 
-
-		$out_summ = $this->request->post['OutSum'];
-		$order_id = $this->request->post["InvId"];
-		$crc = $this->request->post["SignatureValue"];
-
-		$crc = strtoupper($crc);
-
-		$my_crc = strtoupper(md5($out_summ . ":" . $order_id . ":" . $password_1 . ":Shp_item=1"));
-
-		if ($my_crc == $crc) {
+//		$out_summ = $this->request->post['OutSum'];
+//		$order_id = $this->request->post["InvId"];
+//		$crc = $this->request->post["SignatureValue"];
+//
+//		$crc = strtoupper($crc);
+//
+//		$my_crc = strtoupper(md5($out_summ . ":" . $order_id . ":" . ":Shp_item=1"));
+//
+//		if ($my_crc == $crc) {
 			$this->load->model('checkout/order');
 
 			$order_info = $this->model_checkout_order->getOrder($order_id);
@@ -70,15 +65,15 @@ class ControllerExtensionPaymentYandexmoney extends Controller
 
 			$this->response->redirect($this->url->link('checkout/success', '', true));
 
-		} else {
-
-			$this->log->write('yandexmoney ошибка в заказе: ' . $order_id . 'Контрольные суммы не совпадают');
-
-			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 404 Not Found');
-
-			$this->response->redirect($this->url->link('error/error', '', true));
-
-		}
+//		} else {
+//
+//			$this->log->write('yandexmoney ошибка в заказе: ' . $order_id . 'Контрольные суммы не совпадают');
+//
+//			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 404 Not Found');
+//
+//			$this->response->redirect($this->url->link('error/error', '', true));
+//
+//		}
 
 		return true;
 	}
@@ -121,9 +116,6 @@ class ControllerExtensionPaymentYandexmoney extends Controller
 			if ($order_info['order_status_id'] != $new_order_status_id) {
 				$this->model_checkout_order->addOrderHistory($order_id, $new_order_status_id);
 
-				if ($this->config->get('payment_yandexmoney_test')) {
-					$this->log->write('yandexmoney в заказе: ' . $order_id . '. Статус заказа успешно изменен');
-				}
 
 			}
 
@@ -138,4 +130,22 @@ class ControllerExtensionPaymentYandexmoney extends Controller
 		}
 
 	}
+
+
+    public function confirm() {
+        $json = array();
+
+        if ($this->session->data['payment_method']['code'] == 'yandexmoney') {
+            $this->load->model('checkout/order');
+
+            $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('payment_cod_order_status_id'));
+
+            $json['success'] = true;
+//            $json['redirect'] = $this->url->link('checkout/success');
+        }
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($json));
+    }
+
 }
